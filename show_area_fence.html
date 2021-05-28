@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <style>
+        html,
+    body,
+    #container {
+      width: 100%;
+      height: 95%;
+    }
+    </style>
+    <title>高德围栏</title>
+    <script src="./jquery.min.js"></script>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <script src="https://webapi.amap.com/maps?v=1.4.11&key=您申请的key值&plugin=AMap.PolyEditor"></script>
+    <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+</head>
+
+<body>
+
+    输入高德围栏：
+    <input type="text" name="" id="fence" size="200" value="118.876388,31.324514;118.876602,31.323662;118.875626,31.323419;118.875331,31.324205;118.875943,31.324441;118.876388,31.324514">
+
+    <input type="button" value="显示围栏" id="search">
+
+    <a href="./show_all.html">标记geohash</a>
+    <a href="./index.html">显示geohash 9宫格</a>
+    <a href="./show_area_fence.html">显示电子围栏</a>
+
+    <div id="container"></div>
+    <div class="input-card" style="width: 120px">
+        <button class="btn" onclick="polyEditor.open()" style="margin-bottom: 5px">开始编辑</button>
+        <button class="btn" onclick="polyEditor.close()">结束编辑</button>
+    </div>
+    <script type="text/javascript">
+
+        var polygon;
+        var polyEditor;
+        function _show(path) {
+            var map = new AMap.Map("container", {
+                center: [116.400274, 39.905812],
+                zoom: 14
+            });
+
+            
+            var clickHandler = function(e) {
+                log.info('您在[ '+e.lnglat.getLng()+','+e.lnglat.getLat()+' ]的位置点击了地图！');
+                console.log('您在[ '+e.lnglat.getLng()+','+e.lnglat.getLat()+' ]的位置点击了地图！');
+            };
+
+            // 绑定事件
+            map.on('click', clickHandler);
+            
+
+            polygon = new AMap.Polygon({
+                path: path,
+                isOutline: true,
+                borderWeight: 3,
+                strokeColor: "#FF33FF",
+                strokeWeight: 6,
+                strokeOpacity: 0.2,
+                fillOpacity: 0.4,
+                // 线样式还支持 'dashed'
+                fillColor: '#1791fc',
+                zIndex: 50,
+            })
+
+            polygon.setMap(map)
+            polygon.on('click', function (e) {
+                log.info('触发事件：多边形click，'+e.lnglat.getLng()+','+e.lnglat.getLat())
+                console.log(e.lnglat.getLng()+','+e.lnglat.getLat());
+            })
+            // 缩放地图到合适的视野级别
+            map.setFitView([polygon])
+
+            polyEditor = new AMap.PolyEditor(map, polygon)
+
+            polyEditor.on('addnode', function (event) {
+                log.info('触发事件：addnode')
+                console.log(polygon.getPath());
+            })
+
+            polyEditor.on('adjust', function (event) {
+                log.info('触发事件：adjust')
+            })
+
+            polyEditor.on('removenode', function (event) {
+                log.info('触发事件：removenode')
+            })
+
+            
+
+            polyEditor.on('end', function (event) {
+                log.info('触发事件： end')
+                // event.target 即为编辑后的多边形对象
+                console.log(polygon.path);
+            })
+        }
+
+        var path = [
+            [116.403322, 39.920255],
+            [116.410703, 39.897555],
+            [116.402292, 39.892353],
+            [116.389846, 39.891365]
+        ];
+
+
+        _show(path);
+
+         /**
+         * 获取经纬度数组
+         * */
+         function get_fence() {
+            var fence = $("#fence").val();
+            var gps_arr = fence.split(";");
+            return gps_arr.map(gps_str => {
+                var gps = gps_str.split(",");
+                return gps;
+               
+            });
+        }
+
+        function init() {
+            
+            var fence = get_fence();
+            console.log("获取到fence: ", fence);
+            _show(fence);
+        }
+
+
+        $(function () {
+            $("#search").click(init);
+
+        });
+
+    </script>
+</body>
+
+</html>
